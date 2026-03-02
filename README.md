@@ -1,8 +1,56 @@
-# Netflix ETL Project
-This ETL project combines multiple Netflix data sources from Kaggle into postgreSQL table &amp; mapping SQL queries to UI in Python Flask.
+# Netflix Data Engineering & Analytics Project
 
+This project demonstrates a **complete end-to-end data pipeline** using Netflix datasets. Students start with raw CSV files, integrate them using **PostgreSQL JOIN operations**, analyze the data using **SQL**, and finally build a **Python-based interactive dashboard UI**.
 
-## Data Sources
+The project simulates a real-world workflow used by **data engineers, analysts, and data scientists**.
+
+---
+
+# Project Architecture
+
+```text
+Raw CSV Files
+      │
+      ▼
+PostgreSQL Database
+      │
+      ▼
+SQL JOIN Operations
+      │
+      ▼
+Integrated Dataset
+      │
+      ▼
+SQL Business Analytics
+      │
+      ▼
+Python Backend
+      │
+      ▼
+Interactive Dashboard UI
+```
+
+Students will learn:
+
+* Data Engineering fundamentals
+* PostgreSQL database management
+* SQL JOIN operations
+* Data analytics using SQL
+* Python database connectivity
+* Interactive dashboard development
+
+---
+
+# Data Sources
+
+The project uses three datasets from Kaggle.
+
+| Dataset                    | Description                                   |
+| -------------------------- | --------------------------------------------- |
+| netflix_titles.csv         | Metadata about Netflix movies and TV shows    |
+| movies_all_streaming.csv   | Movies available across streaming platforms   |
+| tv_shows_all_streaming.csv | TV shows available across streaming platforms |
+
 
 Data sources are CSV files available from Kaggle.com, which include data about movies and TV shows on popular streaming services.  The CSV files were downloaded manually from the links shown below, and are saved in the Resources folder of the repository.
 
@@ -20,13 +68,310 @@ Used Excel file ([ETL_Netflix_Major.xlsx](Transformed_Data/ETL_Netflix_Major.xls
 Since the netflix_titles.csv file contains ratings (MPAA) and target audience age data for TV shows and movies on Netflix only, and the tv_shows_all_streaming.csv and movies_all_streaming.csv files contain Rotten Tomatoes and IMDb ratings data, we opted to merge these data sources into a single table that would include all of these data.  We also wanted to remove any titles with null values.  The transform includes:
 - Finding only Netflix titles for TV shows and movies (Sources 1 and 2)
 - Joining TV shows and movies data to Netflix titles data on title name and year of release (Source 3 to Source 1, Source 3 to Source 2)
-- Dropping rows from the merged data with null values
+- Dropping rows from the merged data with null values.
 
+---
+---
 
-## Load
+# Step 1 — Extract (Raw Data)
 
-Two dataframes were created in PostgreSQL which merge the data from Source 3 to Sources 1 and 2 (as separate dataframes).  Since the final fields in each of these dataframes are the same, they can be appended to the same table in postgreSQL.  A schema file to set up a database called 'AreYouStillWatching_db' and the 'final' table for these merged dataframes is included ([AreYouStillWatching_schema.sql](AreYouStillWatching_schema.sql))
+Download the datasets and place them in a Raw_Data folder.
 
-In the jupyter notebook, the sqlalchemy module was used to connect to the database and append the dataframes to the 'final' table.  After the dataframes are appended to the table, the table is loaded back into the jupyter notebook using pandas 'read_sql' method and a copy of the table is saved as a CSV file using 'to_sql'.  The CSV copy of the 'final' table is saved in the Output folder. __Please note: You will need to have the psycopg2 module installed to use the sqlalchemy module with postgreSQL.__
+```
+Raw_Data/
+    netflix_titles.csv
+    movies_all_streaming.csv
+    tv_shows_all_streaming.csv
+```
 
-The jupyter notebook also generates an audit report to see how long each step of the ETL process took to complete, and how many movie and tv show titles were dropped in the final merged dataframes due to filtering for Netflix titles and null values.  The time module is used to track the current time at the beginning and end of the extract, transform, and load phases of the process.
+These files represent the **raw input data sources**.
+
+---
+
+# Step 2 — Load Raw Data into PostgreSQL
+
+Create the project database.
+
+```
+AreYouStillWatching_db
+```
+
+Create tables matching the raw datasets.
+
+### Netflix Titles Table
+
+```sql
+CREATE TABLE netflix_titles (
+    show_id TEXT,
+    type TEXT,
+    title TEXT,
+    director TEXT,
+    cast TEXT,
+    country TEXT,
+    date_added DATE,
+    release_year INT,
+    rating TEXT,
+    duration TEXT,
+    listed_in TEXT,
+    description TEXT
+);
+```
+
+### Movies Streaming Table
+
+```sql
+CREATE TABLE movies_all_streaming (
+    id INT,
+    title TEXT,
+    year INT,
+    age TEXT,
+    imdb FLOAT,
+    rotten_tomatoes TEXT,
+    netflix INT,
+    hulu INT,
+    prime_video INT,
+    disney_plus INT
+);
+```
+
+### TV Shows Streaming Table
+
+```sql
+CREATE TABLE tv_shows_all_streaming (
+    id INT,
+    title TEXT,
+    year INT,
+    age TEXT,
+    imdb FLOAT,
+    rotten_tomatoes TEXT,
+    netflix INT,
+    hulu INT,
+    prime_video INT,
+    disney_plus INT
+);
+```
+
+Load CSV files using PostgreSQL `COPY`.
+
+---
+
+# Step 3 — Data Integration using SQL JOIN
+
+Combine the datasets using SQL joins.
+
+### Movies + Netflix Metadata
+
+```sql
+SELECT
+nt.title,
+nt.type,
+nt.release_year,
+nt.country,
+nt.rating,
+ma.imdb,
+ma.rotten_tomatoes
+FROM netflix_titles nt
+JOIN movies_all_streaming ma
+ON nt.title = ma.title
+AND nt.release_year = ma.year
+WHERE ma.netflix = 1;
+```
+
+### TV Shows + Netflix Metadata
+
+```sql
+SELECT
+nt.title,
+nt.type,
+nt.release_year,
+nt.country,
+nt.rating,
+ta.imdb,
+ta.rotten_tomatoes
+FROM netflix_titles nt
+JOIN tv_shows_all_streaming ta
+ON nt.title = ta.title
+AND nt.release_year = ta.year
+WHERE ta.netflix = 1;
+```
+
+---
+
+# Step 4 — Create Final Integrated Table
+
+```sql
+CREATE TABLE netflix_final AS
+SELECT
+nt.title,
+nt.type,
+nt.release_year,
+nt.country,
+nt.rating,
+nt.duration,
+nt.listed_in,
+nt.description,
+ma.imdb,
+ma.rotten_tomatoes
+FROM netflix_titles nt
+JOIN movies_all_streaming ma
+ON nt.title = ma.title
+AND nt.release_year = ma.year
+WHERE ma.netflix = 1;
+```
+
+Append TV show data to the table.
+
+---
+
+# Step 5 — Business Analytics Queries
+
+Students perform SQL analysis.
+
+Examples:
+
+### Movies vs TV Shows
+
+```sql
+SELECT type, COUNT(*)
+FROM netflix_final
+GROUP BY type;
+```
+
+### Top 5 countries with most content
+
+```sql
+SELECT country, COUNT(*)
+FROM netflix_final
+GROUP BY country
+ORDER BY COUNT(*) DESC
+LIMIT 5;
+```
+
+### Longest movie
+
+```sql
+SELECT title, duration
+FROM netflix_final
+WHERE type='Movie'
+ORDER BY duration DESC
+LIMIT 1;
+```
+
+### Content classification (violence keywords)
+
+```sql
+SELECT
+CASE
+WHEN description ILIKE '%kill%'
+OR description ILIKE '%violence%'
+THEN 'Bad'
+ELSE 'Good'
+END AS category,
+COUNT(*)
+FROM netflix_final
+GROUP BY category;
+```
+
+---
+
+# Step 6 — Python Database Integration
+
+Connect Python to PostgreSQL.
+
+```python
+import pandas as pd
+from sqlalchemy import create_engine
+
+engine = create_engine(
+"postgresql://username:password@localhost:5432/AreYouStillWatching_db"
+)
+
+df = pd.read_sql("SELECT * FROM netflix_final", engine)
+```
+
+---
+
+# Step 7 — Build an Interactive UI Dashboard
+
+Students will build a dashboard using:
+
+* Streamlit
+* Plotly
+
+These tools allow students to create **interactive analytics dashboards directly from Python**.
+
+---
+
+# Example Dashboard Code
+
+```python
+import streamlit as st
+import plotly.express as px
+import pandas as pd
+from sqlalchemy import create_engine
+
+engine = create_engine(
+"postgresql://username:password@localhost:5432/AreYouStillWatching_db"
+)
+
+df = pd.read_sql("SELECT * FROM netflix_final", engine)
+
+st.title("Netflix Content Analytics Dashboard")
+
+fig = px.histogram(df, x="release_year")
+
+st.plotly_chart(fig)
+```
+
+---
+
+# Example Dashboard Features
+
+Students can create visualizations such as:
+
+* Movies vs TV shows distribution
+* Content released per year
+* Top genres
+* Top countries producing Netflix content
+* IMDb rating distribution
+* Actor and director frequency
+
+---
+
+# Repository Structure
+
+```
+
+Raw_data/
+    netflix_titles.csv
+    movies_all_streaming.csv
+    tv_shows_all_streaming.csv
+
+PostgreSQL_data/
+    schema.sql
+    joins.sql
+    analytics_queries.sql
+
+python/
+    db_connection.py
+    data_analysis.ipynb
+
+dashboard/
+    app.py
+
+README.md
+```
+
+---
+
+# Skills Learned
+
+Students will gain practical experience in:
+
+* Data Engineering pipelines
+* PostgreSQL database design
+* SQL JOIN operations
+* Data integration
+* SQL analytics
+* Python data analysis
+* Dashboard development
