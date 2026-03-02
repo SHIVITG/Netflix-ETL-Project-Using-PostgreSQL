@@ -9,7 +9,7 @@ The project simulates a real-world workflow used by **data engineers, analysts, 
 # Project Architecture
 
 ```
-![Netflix ETL Pipeline Architecture](https://raw.githubusercontent.com/SHIVITG/Netflix-ETL-Project-Using-PostgreSQL/main/architecture-diagram.png)
+![Netflix ETL Pipeline Architecture](architecture-diagram.png)
 ```
 
 Students will learn:
