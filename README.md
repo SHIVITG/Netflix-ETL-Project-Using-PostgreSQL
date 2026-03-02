@@ -8,26 +8,8 @@ The project simulates a real-world workflow used by **data engineers, analysts, 
 
 # Project Architecture
 
-```text
-Raw CSV Files
-      │
-      ▼
-PostgreSQL Database
-      │
-      ▼
-SQL JOIN Operations
-      │
-      ▼
-Integrated Dataset
-      │
-      ▼
-SQL Business Analytics
-      │
-      ▼
-Python Backend
-      │
-      ▼
-Interactive Dashboard UI
+```
+![Netflix ETL Pipeline Architecture](https://raw.githubusercontent.com/SHIVITG/Netflix-ETL-Project-Using-PostgreSQL/main/architecture-diagram.png)
 ```
 
 Students will learn:
