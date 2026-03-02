@@ -325,6 +325,40 @@ st.plotly_chart(fig)
 
 ---
 
+# Running the Project
+
+The repository follows a consistent lowercase, underscore naming convention. A helper script (`rename_dirs.py`) is included that can rename the directories if you need to apply the conventions automatically.
+
+After placing the CSV files in the `raw_data/` folder (or run the script to rename) you can execute the end-to-end pipeline in two different ways.
+
+1. **SQL-only (psql)**
+   * Create the database (if not already created):
+     ```sh
+     createdb AreYouStillWatching_db
+     psql -d AreYouStillWatching_db -f sql/schema.sql
+     psql -d AreYouStillWatching_db -c "\copy netflix_titles FROM 'raw_data/netflix_titles.csv' CSV HEADER"
+     psql -d AreYouStillWatching_db -c "\copy movies_all_streaming FROM 'raw_data/movies_all_streaming.csv' CSV HEADER"
+     psql -d AreYouStillWatching_db -c "\copy tv_shows_all_streaming FROM 'raw_data/tv_shows_all_streaming.csv' CSV HEADER"
+     psql -d AreYouStillWatching_db -f sql/joins.sql
+     ```
+   * Run analytics queries with `psql -f PostgreSQL_data/analytics_queries.sql` or interactively.
+
+2. **Python-driven pipeline**
+   * Install dependencies from `requirements.txt` (e.g. `pip install -r requirements.txt`).
+   * Set PostgreSQL credentials via environment variables (`PGUSER`, `PGPASSWORD`, `PGDATABASE`, etc.) or modify `scripts/db_connection.py`.
+   * Run the helper script:
+     ```sh
+     python3 scripts/run_pipeline.py
+     ```
+     This will execute the schema script, copy the raw CSVs into the database, and create the `netflix_final` table.
+
+3. **Exploration and dashboard**
+   * After the data is loaded you can open `scripts/data_analysis.ipynb` with Jupyter to explore the data or use the sample code above.
+   * To launch the Streamlit dashboard run:
+     ```sh
+     streamlit run app/app.py
+     ```
+
 # Example Dashboard Features
 
 Students can create visualizations such as:
@@ -342,22 +376,29 @@ Students can create visualizations such as:
 
 ```
 
-Raw_data/
+raw_data/
     netflix_titles.csv
     movies_all_streaming.csv
     tv_shows_all_streaming.csv
 
-PostgreSQL_data/
+transformed_data/
+    ETL_Netflix_Major.xlsx
+    Netflix_ETL_Basic.xlsx
+
+sql/
     schema.sql
     joins.sql
     analytics_queries.sql
 
-python/
+scripts/
     db_connection.py
     data_analysis.ipynb
+    run_pipeline.py
 
-dashboard/
+app/
     app.py
+
+rename_dirs.py  (helper for renaming folders)
 
 README.md
 ```
