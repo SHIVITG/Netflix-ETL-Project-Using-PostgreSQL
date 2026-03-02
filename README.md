@@ -8,7 +8,7 @@ The project simulates a real-world workflow used by **data engineers, analysts, 
 
 # Project Architecture
 
-![Netflix ETL Pipeline Architecture](ProjectWorkflow.png)
+![Netflix ETL Pipeline Architecture](ProjectWorflow.png)
 
 Students will learn:
 
