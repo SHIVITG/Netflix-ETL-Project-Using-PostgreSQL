@@ -1,5 +1,6 @@
-pandas
 SQLAlchemy
 psycopg2-binary
-streamlit
+pandas
 plotly
+matplotlib
+streamlit
